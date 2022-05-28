@@ -181,7 +181,10 @@ namespace RandomCompanions
             var hatchlingfsm = ce.LocateMyFSM("Hatchling Spawn");
             PlayMakerFSM weaverlingControl = ce.LocateMyFSM("Weaverling Control");
 
-            hatchlingfsm.InsertAction("Equipped", new SetIntValue {intVariable = hatchlingfsm.Fsm.GetFsmInt("Hatchling Max"),intValue=Math.Abs(Settings.HatchlingMaxCount) ,everyFrame=false}, 0);
+            hatchlingfsm.InsertAction("Equipped", new SetIntValue {intVariable = hatchlingfsm.Fsm.GetFsmInt("Soul Cost"),intValue=Math.Abs(Settings.HatchlingSoulCost) ,everyFrame=false}, 0);
+            hatchlingfsm.InsertAction("Equipped", new SetIntValue {intVariable = hatchlingfsm.Fsm.GetFsmInt("Hatchling Max"),intValue=Math.Abs(Settings.HatchlingMaxCount) ,everyFrame=false}, 1);
+            hatchlingfsm.InsertAction("Equipped", new SetFloatValue { floatVariable = hatchlingfsm.Fsm.GetFsmFloat("Hatch Time"), floatValue = Math.Abs(Settings.HatchlingSpawnTime + 0.01f), everyFrame = false },2);
+
             SpawnObjectFromGlobalPool p1 = weaverlingControl.GetAction<SpawnObjectFromGlobalPool>("Spawn",0);
             SpawnObjectFromGlobalPool p2 = weaverlingControl.GetAction<SpawnObjectFromGlobalPool>("Spawn",1);
             SpawnObjectFromGlobalPool p3 = weaverlingControl.GetAction<SpawnObjectFromGlobalPool>("Spawn",2);

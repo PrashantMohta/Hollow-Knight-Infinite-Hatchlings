@@ -15,6 +15,7 @@ namespace RandomCompanions
                     (setting) => { RandomCompanions.Settings.attackOption = (setting == 1); },
                     () => RandomCompanions.Settings.attackOption ? 1 : 0,
                     Id:"AttackEnabled"),
+                new TextPanel("Hatchling Settings",800f),
                 new HorizontalOption(
                     "Free Hatchlings", "Make Affected charms free.",
                     new string[] { "Disabled", "Enabled" },
@@ -29,6 +30,35 @@ namespace RandomCompanions
                         return RandomCompanions.Settings.HatchlingcharmCost == 0 ? 1 : 0;
                     },
                     Id:"FreeHatchlings"),
+                new HorizontalOption(
+                    "Quick Spawn", "Remove Delays when spawning hatchlings.",
+                    new string[] { "Disabled", "Enabled" },
+                    (setting) => {
+                         if((setting == 1)){
+                            RandomCompanions.Settings.HatchlingSpawnTime = 0f;
+                        } else {
+                            RandomCompanions.Settings.HatchlingSpawnTime = defaultSettings.HatchlingSpawnTime;
+                        } 
+                    },
+                    () => {
+                        return RandomCompanions.Settings.HatchlingSpawnTime == 0 ? 1 : 0;
+                    },
+                    Id:"QuickHatchlings"),
+                new CustomSlider(
+                    "Max Hatchlings Count",
+                    (f)=>{
+                        RandomCompanions.Settings.HatchlingMaxCount = (int)f;
+                    },
+                    () => (float)RandomCompanions.Settings.HatchlingMaxCount,
+                    Id:"WeaverlingCount"){ wholeNumbers = true, minValue = 0, maxValue = 15},
+                new CustomSlider(
+                    "Hatchling Soul Cost",
+                    (f)=>{
+                        RandomCompanions.Settings.HatchlingSoulCost = (int)f;
+                    },
+                    () => (float)RandomCompanions.Settings.HatchlingSoulCost,
+                    Id:"HatchlingSoulCost"){ wholeNumbers = true, minValue = 0, maxValue = 15},
+                new TextPanel("Weaverlings Settings",800f),
                 new HorizontalOption(
                     "Free Weaverlings", "Make Affected charms free.",
                     new string[] { "Disabled", "Enabled" },
@@ -50,13 +80,6 @@ namespace RandomCompanions
                     },
                     () => (float)RandomCompanions.Settings.WeaverlingMaxCount,
                     Id:"WeaverlingCount"){ wholeNumbers = true, minValue = 3, maxValue = 15},
-                new CustomSlider(
-                    "Max Hatchlings Count",
-                    (f)=>{
-                        RandomCompanions.Settings.HatchlingMaxCount = (int)f;
-                    },
-                    () => (float)RandomCompanions.Settings.HatchlingMaxCount,
-                    Id:"WeaverlingCount"){ wholeNumbers = true, minValue = 0, maxValue = 15}
             });
         }
         internal static MenuScreen GetMenu(MenuScreen lastMenu, ModToggleDelegates? toggleDelegates){
