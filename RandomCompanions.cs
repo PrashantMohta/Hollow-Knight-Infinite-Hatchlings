@@ -75,8 +75,16 @@ namespace RandomCompanions
             On.KnightHatchling.Start += KnightHatchling_Start;
             On.WeaverlingEnemyList.OnEnable += WeaverlingEnemyList_OnEnable;
             ModHooks.GetPlayerIntHook += ModifyCharmCost;
+            ModHooks.GetPlayerBoolHook += ModifyCharmGot;
         }
 
+        private bool ModifyCharmGot(string name,bool orig){
+            if (name == nameof(PlayerData.gotCharm_22))
+                return Settings.HatchlingcharmCost == 0;
+            if (name == nameof(PlayerData.gotCharm_39))
+                return Settings.WeaverlingcharmCost == 0;
+            return orig;
+        }
         private int ModifyCharmCost(string intName, int orig)
         {
             if (intName == nameof(PlayerData.charmCost_22))
@@ -214,6 +222,7 @@ namespace RandomCompanions
             On.KnightHatchling.Start -= KnightHatchling_Start;
             On.WeaverlingEnemyList.OnEnable -= WeaverlingEnemyList_OnEnable;
             ModHooks.GetPlayerIntHook -= ModifyCharmCost;
+            ModHooks.GetPlayerBoolHook -= ModifyCharmGot;
         }
 
         private string getVersionSafely(){
