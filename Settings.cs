@@ -9,6 +9,8 @@
         public float HatchlingSpawnTime = 4.0f;
         public int WeaverlingMaxCount = 3;
         public int WeaverlingcharmCost = 2;
+        public int GrimmChildMaxCount = 1;
+        public int GrimmChildcharmCost = 2;
 
     }
 }

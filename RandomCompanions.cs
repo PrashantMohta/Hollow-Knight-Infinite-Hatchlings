@@ -7,6 +7,7 @@ namespace RandomCompanions
         private readonly Dictionary<string, Texture2D> hatchlingTex = new Dictionary<string, Texture2D>();
         private int _HatchlingSelector = -1;
         private int _WeaverlingSelector = -1;
+        private int _GrimmChildSelector = -1;
 
         private int firstValidSkin(ISelectableSkin[] arr,string fileName, int currentSkin){
             var i = currentSkin + 1;
@@ -50,7 +51,21 @@ namespace RandomCompanions
 
         }
 
-        public ISelectableSkin[] hatchlingSkins,weaverSkins;
+        public int grimmChildSelector
+        {
+            get
+            {    if(grimmChildSkins != null){
+                    _GrimmChildSelector = firstValidSkin(grimmChildSkins,"Grimm.png",_GrimmChildSelector);
+                    return _GrimmChildSelector;
+                } else {
+                    _GrimmChildSelector = -1;
+                    return _GrimmChildSelector;
+                }
+            }
+
+        }
+
+        public ISelectableSkin[] hatchlingSkins,weaverSkins,grimmChildSkins;
         public override void Initialize()
         {
             CustomKnight.CustomKnight.OnReady += (_,e)=>{
@@ -69,20 +84,56 @@ namespace RandomCompanions
                     }
                 }
                 weaverSkins = filtered.ToArray();
+                filtered = new List<ISelectableSkin>();
+                for(var i = 0; i < _installedSkins.Length ; i++){
+                    if(_installedSkins[i].Exists("Grimm.png")){
+                        filtered.Add(_installedSkins[i]);
+                    }
+                }
+                grimmChildSkins = filtered.ToArray();
             };
+
             ModHooks.AfterSavegameLoadHook += ModifyHatchling;
             ModHooks.ObjectPoolSpawnHook += Instance_ObjectPoolSpawnHook;
             On.KnightHatchling.Start += KnightHatchling_Start;
             On.WeaverlingEnemyList.OnEnable += WeaverlingEnemyList_OnEnable;
             ModHooks.GetPlayerIntHook += ModifyCharmCost;
             ModHooks.GetPlayerBoolHook += ModifyCharmGot;
+            On.PlayMakerFSM.OnEnable += FSMedits;
+
         }
 
+        private void FSMedits(On.PlayMakerFSM.orig_OnEnable orig, PlayMakerFSM self){
+            orig(self);
+            if(self.gameObject.name == "Grimmchild" && self.FsmName == "Control"){
+                if( !Settings.attackOption )
+                {
+                    self.Fsm.GetFsmFloat("Attack Timer").Value = 9999f;
+                    self.GetAction<FloatSubtract>("Follow",0).subtract.Value = 0f;
+                } else {
+                    self.Fsm.GetFsmFloat("Attack Timer").Value = 0.75f;
+                    self.GetAction<FloatSubtract>("Follow",0).subtract.Value = 1f;
+                }
+            }
+
+            if(self.gameObject.name == "Charm Effects" && self.FsmName == "Spawn Grimmchild"){
+                var spawn = self.GetAction<SpawnObjectFromGlobalPool>("Spawn",2);
+                self.AddCustomAction("Spawn", ()=>{
+                if(Settings.GrimmChildMaxCount > 1){
+                    for(var i = 1; i < Settings.GrimmChildMaxCount ; i++){
+                        spawn.OnEnter();
+                    }
+                }
+            });
+            }
+        }
         private bool ModifyCharmGot(string name,bool orig){
             if (name == nameof(PlayerData.gotCharm_22))
-                return Settings.HatchlingcharmCost == 0;
+                return Settings.HatchlingcharmCost == 0 || orig;
             if (name == nameof(PlayerData.gotCharm_39))
-                return Settings.WeaverlingcharmCost == 0;
+                return Settings.WeaverlingcharmCost == 0 || orig;
+            if (name == nameof(PlayerData.gotCharm_40))
+                return Settings.GrimmChildcharmCost == 0 || orig;
             return orig;
         }
         private int ModifyCharmCost(string intName, int orig)
@@ -91,6 +142,8 @@ namespace RandomCompanions
                 return Math.Abs(Settings.HatchlingcharmCost);
             if (intName == nameof(PlayerData.charmCost_39))
                 return Math.Abs(Settings.WeaverlingcharmCost);
+            if (intName == nameof(PlayerData.charmCost_40))
+                return Math.Abs(Settings.GrimmChildcharmCost);
             return orig;
         }
 
@@ -174,6 +227,21 @@ namespace RandomCompanions
                     }
                 }
             }
+
+            if(go.tag == "Grimmchild"){
+                int skinId = grimmChildSelector;
+                if(skinId > -1){
+                    Texture2D tex = LoadTex(grimmChildSkins,skinId,"Grimm.png");
+                    if (tex)
+                    {
+                        var materialProp = new MaterialPropertyBlock();
+                        go.GetComponent<MeshRenderer>().GetPropertyBlock(materialProp);
+                        materialProp.SetTexture("_MainTex", tex);
+                        go.GetComponent<MeshRenderer>().SetPropertyBlock(materialProp);
+                    }
+                }
+            }
+
             return go;
         }
 
@@ -181,6 +249,7 @@ namespace RandomCompanions
         {
             GameManager.instance.StartCoroutine(HeroFinder());
         }
+        
         private IEnumerator HeroFinder() 
         {
             yield return new WaitWhile(()=>HeroController.instance == null);

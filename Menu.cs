@@ -80,6 +80,28 @@ namespace RandomCompanions
                     },
                     () => (float)RandomCompanions.Settings.WeaverlingMaxCount,
                     Id:"WeaverlingCount"){ wholeNumbers = true, minValue = 3, maxValue = 15},
+                new TextPanel("GrimmChild Settings",800f),
+                new HorizontalOption(
+                    "Free GrimmChild", "Make Affected charms free.",
+                    new string[] { "Disabled", "Enabled" },
+                    (setting) => {
+                         if((setting == 1)){
+                            RandomCompanions.Settings.GrimmChildcharmCost = 0;
+                        } else {
+                            RandomCompanions.Settings.GrimmChildcharmCost = defaultSettings.WeaverlingcharmCost;
+                        } 
+                    },
+                    () => {
+                         return RandomCompanions.Settings.GrimmChildcharmCost == 0 ? 1 : 0;
+                    },
+                    Id:"FreeGrimmChild"),
+                new CustomSlider(
+                    "Max GrimmChild Count",
+                    (f)=>{
+                        RandomCompanions.Settings.GrimmChildMaxCount = (int)f;
+                    },
+                    () => (float)RandomCompanions.Settings.GrimmChildMaxCount,
+                    Id:"GrimmChildCount"){ wholeNumbers = true, minValue = 1, maxValue = 15},
             });
         }
         internal static MenuScreen GetMenu(MenuScreen lastMenu, ModToggleDelegates? toggleDelegates){
