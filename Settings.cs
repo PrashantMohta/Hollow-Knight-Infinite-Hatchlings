@@ -11,6 +11,7 @@
         public int WeaverlingcharmCost = 2;
         public int GrimmChildMaxCount = 1;
         public int GrimmChildcharmCost = 2;
+        public bool GrimmChildMultiLevel = true;
 
     }
 }

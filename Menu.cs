@@ -102,6 +102,20 @@ namespace RandomCompanions
                     },
                     () => (float)RandomCompanions.Settings.GrimmChildMaxCount,
                     Id:"GrimmChildCount"){ wholeNumbers = true, minValue = 1, maxValue = 15},
+                new HorizontalOption(
+                    "Multi-Level GrimmChilden", "Cycle through all levels of GrimmChild",
+                    new string[] { "Disabled", "Enabled" },
+                    (setting) => {
+                         if((setting == 1)){
+                            RandomCompanions.Settings.GrimmChildMultiLevel = true;
+                        } else {
+                            RandomCompanions.Settings.GrimmChildMultiLevel = false;
+                        } 
+                    },
+                    () => {
+                         return RandomCompanions.Settings.GrimmChildMultiLevel ? 1 : 0;
+                    },
+                    Id:"GrimmChildMultiLevel"),
             });
         }
         internal static MenuScreen GetMenu(MenuScreen lastMenu, ModToggleDelegates? toggleDelegates){

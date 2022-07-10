@@ -8,6 +8,9 @@ namespace RandomCompanions
         private int _HatchlingSelector = -1;
         private int _WeaverlingSelector = -1;
         private int _GrimmChildSelector = -1;
+        private System.Random rng = new System.Random();
+
+        private List<float> gcOffsets = new List<float>();
 
         private int firstValidSkin(ISelectableSkin[] arr,string fileName, int currentSkin){
             var i = currentSkin + 1;
@@ -65,6 +68,15 @@ namespace RandomCompanions
 
         }
 
+        private int _gcLevel = 1;
+        public int gcLevel {
+            get {
+                _gcLevel++;
+                if(_gcLevel > 4){ _gcLevel = 1;}
+                return _gcLevel;
+            }
+        }
+
         public ISelectableSkin[] hatchlingSkins,weaverSkins,grimmChildSkins;
         public override void Initialize()
         {
@@ -93,7 +105,6 @@ namespace RandomCompanions
                 grimmChildSkins = filtered.ToArray();
             };
 
-            ModHooks.AfterSavegameLoadHook += ModifyHatchling;
             ModHooks.ObjectPoolSpawnHook += Instance_ObjectPoolSpawnHook;
             On.KnightHatchling.Start += KnightHatchling_Start;
             On.WeaverlingEnemyList.OnEnable += WeaverlingEnemyList_OnEnable;
@@ -102,10 +113,22 @@ namespace RandomCompanions
             On.PlayMakerFSM.OnEnable += FSMedits;
 
         }
-
+        private float getUniqueGcOffset(){
+            var maxValue = 20;
+            var minValue = 1;
+            float attempt = 2;
+            var tries = 5;
+            while(gcOffsets.Contains(attempt) || tries < 0){
+                attempt = (float)Math.Round((rng.NextDouble() * (maxValue) + minValue) * 2);
+                tries--;
+            }
+            gcOffsets.Add(attempt);
+            return attempt;
+        }
         private void FSMedits(On.PlayMakerFSM.orig_OnEnable orig, PlayMakerFSM self){
             orig(self);
-            if(self.gameObject.name == "Grimmchild" && self.FsmName == "Control"){
+
+            if(self.gameObject.tag == "Grimmchild" && self.FsmName == "Control"){
                 if( !Settings.attackOption )
                 {
                     self.Fsm.GetFsmFloat("Attack Timer").Value = 9999f;
@@ -114,17 +137,66 @@ namespace RandomCompanions
                     self.Fsm.GetFsmFloat("Attack Timer").Value = 0.75f;
                     self.GetAction<FloatSubtract>("Follow",0).subtract.Value = 1f;
                 }
+                if(Settings.GrimmChildMaxCount > 1){
+                    if(Settings.GrimmChildMultiLevel){
+                        var levelStr = new FsmString();
+                        levelStr.Value = gcLevel.ToString();
+                        self.GetAction<SendEventByName>("Init",5).sendEvent = levelStr;
+                    }
+                    self.AddCustomAction("Change",(PlayMakerFSM fsm)=>{
+                        var oldTarget = self.GetAction<DistanceFlySmooth>("Follow",11).target;
+                        if(oldTarget.Value == HeroController.instance.gameObject){
+                            var fakeTarget = new GameObject("RandomCompanions.gc.target");
+                            fakeTarget.transform.SetParent(HeroController.instance.gameObject.transform,false);
+                            fakeTarget.transform.localPosition = new Vector3((rng.Next(-1,1) > 0 ? 1 : -1)*getUniqueGcOffset()/6,getUniqueGcOffset()/10,0);
+                            var targ = new FsmGameObject();
+                            targ.Value = fakeTarget;
+                            self.GetAction<DistanceFlySmooth>("Follow",11).target = targ;
+                        }
+                    });
+                    
+                }
             }
 
             if(self.gameObject.name == "Charm Effects" && self.FsmName == "Spawn Grimmchild"){
                 var spawn = self.GetAction<SpawnObjectFromGlobalPool>("Spawn",2);
                 self.AddCustomAction("Spawn", ()=>{
-                if(Settings.GrimmChildMaxCount > 1){
-                    for(var i = 1; i < Settings.GrimmChildMaxCount ; i++){
-                        spawn.OnEnter();
+                    if(Settings.GrimmChildMaxCount > 1){
+                        for(var i = 1; i < Settings.GrimmChildMaxCount ; i++){
+                            spawn.OnEnter();
+                        }
                     }
-                }
-            });
+                });
+            }
+
+            
+            if(self.gameObject.name == "Charm Effects" && self.FsmName == "Hatchling Spawn"){
+                self.Fsm.GetFsmInt("Soul Cost").Value = (int)Math.Abs(Settings.HatchlingSoulCost);
+                self.Fsm.GetFsmInt("Hatchling Max").Value = (int)Math.Abs(Settings.HatchlingMaxCount);
+                self.Fsm.GetFsmInt("Hatch Time").Value = (int)Math.Abs(Settings.HatchlingSpawnTime);
+            }
+
+            if(self.gameObject.name == "Charm Effects" && self.FsmName == "Weaverling Control"){
+                SpawnObjectFromGlobalPool p1 = self.GetAction<SpawnObjectFromGlobalPool>("Spawn",0);
+                SpawnObjectFromGlobalPool p2 = self.GetAction<SpawnObjectFromGlobalPool>("Spawn",1);
+                SpawnObjectFromGlobalPool p3 = self.GetAction<SpawnObjectFromGlobalPool>("Spawn",2);
+                self.AddCustomAction("Spawn", ()=>{
+                    if(Settings.WeaverlingMaxCount > 3){
+                        var j = 1;
+                        for(var i = 3; i < Settings.WeaverlingMaxCount ; i++){
+                            if(j == 3){
+                                p3.OnEnter();
+                                j = 1;
+                            }else if(j == 2){
+                                p2.OnEnter();
+                                j = 3;
+                            }else if(j == 1){
+                                p1.OnEnter();
+                                j = 3;
+                            }
+                        }
+                    }
+                });
             }
         }
         private bool ModifyCharmGot(string name,bool orig){
@@ -245,48 +317,9 @@ namespace RandomCompanions
             return go;
         }
 
-        private void ModifyHatchling(SaveGameData data)
-        {
-            GameManager.instance.StartCoroutine(HeroFinder());
-        }
-        
-        private IEnumerator HeroFinder() 
-        {
-            yield return new WaitWhile(()=>HeroController.instance == null);
 
-            var ce = GameObject.Find("Charm Effects");
-            var hatchlingfsm = ce.LocateMyFSM("Hatchling Spawn");
-            PlayMakerFSM weaverlingControl = ce.LocateMyFSM("Weaverling Control");
-
-            hatchlingfsm.InsertAction("Equipped", new SetIntValue {intVariable = hatchlingfsm.Fsm.GetFsmInt("Soul Cost"),intValue=Math.Abs(Settings.HatchlingSoulCost) ,everyFrame=false}, 0);
-            hatchlingfsm.InsertAction("Equipped", new SetIntValue {intVariable = hatchlingfsm.Fsm.GetFsmInt("Hatchling Max"),intValue=Math.Abs(Settings.HatchlingMaxCount) ,everyFrame=false}, 1);
-            hatchlingfsm.InsertAction("Equipped", new SetFloatValue { floatVariable = hatchlingfsm.Fsm.GetFsmFloat("Hatch Time"), floatValue = Math.Abs(Settings.HatchlingSpawnTime + 0.01f), everyFrame = false },2);
-
-            SpawnObjectFromGlobalPool p1 = weaverlingControl.GetAction<SpawnObjectFromGlobalPool>("Spawn",0);
-            SpawnObjectFromGlobalPool p2 = weaverlingControl.GetAction<SpawnObjectFromGlobalPool>("Spawn",1);
-            SpawnObjectFromGlobalPool p3 = weaverlingControl.GetAction<SpawnObjectFromGlobalPool>("Spawn",2);
-            weaverlingControl.AddCustomAction("Spawn", ()=>{
-                if(Settings.WeaverlingMaxCount > 3){
-                    var j = 1;
-                    for(var i = 3; i < Settings.WeaverlingMaxCount ; i++){
-                        if(j == 3){
-                            p3.OnEnter();
-                            j = 1;
-                        }else if(j == 2){
-                            p2.OnEnter();
-                            j = 3;
-                        }else if(j == 1){
-                            p1.OnEnter();
-                            j = 3;
-                        }
-                    }
-                }
-            });
-            LogDebug("Modify MaxCount");
-        }
         public void Unload()
         {
-            ModHooks.AfterSavegameLoadHook -= ModifyHatchling;
             ModHooks.ObjectPoolSpawnHook -= Instance_ObjectPoolSpawnHook;
             On.KnightHatchling.Start -= KnightHatchling_Start;
             On.WeaverlingEnemyList.OnEnable -= WeaverlingEnemyList_OnEnable;
