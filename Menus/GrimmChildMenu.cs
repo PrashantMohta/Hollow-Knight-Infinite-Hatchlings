@@ -5,25 +5,39 @@ namespace RandomCompanions
     {
         internal static Menu GrimmChildMenu;
         internal static Menu PrepareGrimmChildMenu(){
-            return new Menu("Grimmchild Settngs",new Element[]{
-
+            return new Menu("Grimmchild Settings",new Element[]{
                 new HorizontalOption(
-                    "Free GrimmChild", "Make Affected charms free.",
+                    "Start With Grimmchild", "Automatically give charm at start of game.",
                     new string[] { "Disabled", "Enabled" },
                     (setting) => {
                          if((setting == 1)){
-                            RandomCompanions.Settings.GrimmChildcharmCost = 0;
+                            RandomCompanions.Settings.GrimmChildCharmStart = true;
                         } else {
-                            RandomCompanions.Settings.GrimmChildcharmCost = defaultSettings.WeaverlingcharmCost;
+                            RandomCompanions.Settings.GrimmChildCharmStart = false;
+                        }
+                    },
+                    () => {
+                         return RandomCompanions.Settings.GrimmChildCharmStart ? 1 : 0;
+                    },
+                    Id:"AutoGrimmChild"),
+
+                new HorizontalOption(
+                    "Free Grimmchild", "Make charm free to equip.",
+                    new string[] { "Disabled", "Enabled" },
+                    (setting) => {
+                         if((setting == 1)){
+                            RandomCompanions.Settings.GrimmChildCharmFree = true;
+                        } else {
+                            RandomCompanions.Settings.GrimmChildCharmFree = false;
                         } 
                     },
                     () => {
-                         return RandomCompanions.Settings.GrimmChildcharmCost == 0 ? 1 : 0;
+                         return RandomCompanions.Settings.GrimmChildCharmFree ? 1 : 0;
                     },
                     Id:"FreeGrimmChild"),
 
                 new CustomSlider(
-                    "Max GrimmChild Count",
+                    "Max Grimmchild Count",
                     (f)=>{
                         RandomCompanions.Settings.GrimmChildMaxCount = (int)f;
                     },
@@ -32,7 +46,7 @@ namespace RandomCompanions
                     Id:"GrimmChildCount"),
 
                 new HorizontalOption(
-                    "Multi-Level GrimmChilden", "Cycle through all levels of GrimmChild",
+                    "Multi-Level Grimmchildren", "Cycle through all levels of Grimmchild",
                     new string[] { "Disabled", "Enabled" },
                     (setting) => {
                          if((setting == 1)){

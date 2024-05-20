@@ -199,23 +199,24 @@ namespace RandomCompanions
                 });
             }
         }
-        private bool ModifyCharmGot(string name,bool orig){
+        private bool ModifyCharmGot(string name, bool orig)
+        {
             if (name == nameof(PlayerData.gotCharm_22))
-                return Settings.HatchlingcharmCost == 0 || orig;
+                return Settings.HatchlingCharmStart || orig;
             if (name == nameof(PlayerData.gotCharm_39))
-                return Settings.WeaverlingcharmCost == 0 || orig;
+                return Settings.WeaverlingCharmStart || orig;
             if (name == nameof(PlayerData.gotCharm_40))
-                return Settings.GrimmChildcharmCost == 0 || orig;
+                return Settings.GrimmChildCharmStart || orig;
             return orig;
         }
         private int ModifyCharmCost(string intName, int orig)
         {
             if (intName == nameof(PlayerData.charmCost_22))
-                return Math.Abs(Settings.HatchlingcharmCost);
+                return Settings.HatchlingCharmFree ? 0 : orig;
             if (intName == nameof(PlayerData.charmCost_39))
-                return Math.Abs(Settings.WeaverlingcharmCost);
+                return Settings.WeaverlingCharmFree ? 0 : orig;
             if (intName == nameof(PlayerData.charmCost_40))
-                return Math.Abs(Settings.GrimmChildcharmCost);
+                return Settings.GrimmChildCharmFree ? 0 : orig;
             return orig;
         }
 
