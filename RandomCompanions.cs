@@ -118,7 +118,12 @@ namespace RandomCompanions
             var minValue = 1;
             float attempt = 2;
             var tries = 5;
-            while(gcOffsets.Contains(attempt) || tries < 0){
+            if (gcOffsets.Count == Settings.GrimmChildMaxCount)
+            {
+                gcOffsets.RemoveAt(0);
+            }
+            while (gcOffsets.Contains(attempt) || tries > 0)
+            {
                 attempt = (float)Math.Round((rng.NextDouble() * (maxValue) + minValue) * 2);
                 tries--;
             }
@@ -154,7 +159,7 @@ namespace RandomCompanions
                             self.GetAction<DistanceFlySmooth>("Follow",11).target = targ;
                         }
                     });
-                    
+
                 }
             }
 
@@ -192,7 +197,7 @@ namespace RandomCompanions
                                 j = 3;
                             }else if(j == 1){
                                 p1.OnEnter();
-                                j = 3;
+                                j = 2;
                             }
                         }
                     }
