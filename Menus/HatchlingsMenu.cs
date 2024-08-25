@@ -5,24 +5,39 @@ namespace RandomCompanions
     {
         internal static Menu HatchlingMenu;
         internal static Menu PrepareHatchlingsMenu(){
-            return new Menu("Hatchling Settngs",new Element[]{
+            return new Menu("Hatchling Settings",new Element[]{
                 new HorizontalOption(
-                    "Free Hatchlings", "Make Affected charms free.",
+                    "Start With Glowing Womb", "Automatically give charm at start of game.",
                     new string[] { "Disabled", "Enabled" },
                     (setting) => {
                          if((setting == 1)){
-                            RandomCompanions.Settings.HatchlingcharmCost = 0;
+                            RandomCompanions.Settings.HatchlingCharmStart = true;
                         } else {
-                            RandomCompanions.Settings.HatchlingcharmCost = defaultSettings.HatchlingcharmCost;
+                            RandomCompanions.Settings.HatchlingCharmStart = false;
+                        }
+                    },
+                    () => {
+                         return RandomCompanions.Settings.HatchlingCharmStart ? 1 : 0;
+                    },
+                    Id:"AutoHatchings"),
+
+                new HorizontalOption(
+                    "Free Glowing Womb", "Make charm free to equip.",
+                    new string[] { "Disabled", "Enabled" },
+                    (setting) => {
+                         if((setting == 1)){
+                            RandomCompanions.Settings.HatchlingCharmFree = true;
+                        } else {
+                            RandomCompanions.Settings.HatchlingCharmFree = false;
                         } 
                     },
                     () => {
-                        return RandomCompanions.Settings.HatchlingcharmCost == 0 ? 1 : 0;
+                        return RandomCompanions.Settings.HatchlingCharmFree ? 1 : 0;
                     },
                     Id:"FreeHatchlings"),
 
                 new HorizontalOption(
-                    "Quick Spawn", "Remove Delays when spawning hatchlings.",
+                    "Quick Spawn", "Remove delays when spawning hatchlings.",
                     new string[] { "Disabled", "Enabled" },
                     (setting) => {
                          if((setting == 1)){

@@ -5,21 +5,37 @@ namespace RandomCompanions
     {
         internal static Menu WeaverlingsMenu;
         internal static Menu PrepareWeaverlingsMenu(){
-            return new Menu("Weaverlings Settngs",new Element[]{
+            return new Menu("Weaverlings Settings",new Element[]{
                 new HorizontalOption(
-                    "Free Weaverlings", "Make Affected charms free.",
+                    "Start With Weaversong", "Automatically give charm at start of game.",
                     new string[] { "Disabled", "Enabled" },
                     (setting) => {
                          if((setting == 1)){
-                            RandomCompanions.Settings.WeaverlingcharmCost = 0;
+                            RandomCompanions.Settings.WeaverlingCharmStart = true;
                         } else {
-                            RandomCompanions.Settings.WeaverlingcharmCost = defaultSettings.WeaverlingcharmCost;
+                            RandomCompanions.Settings.WeaverlingCharmStart = false;
+                        }
+                    },
+                    () => {
+                         return RandomCompanions.Settings.WeaverlingCharmStart ? 1 : 0;
+                    },
+                    Id:"AutoWeaverlings"),
+
+                new HorizontalOption(
+                    "Free Weaversong", "Make charm free to equip.",
+                    new string[] { "Disabled", "Enabled" },
+                    (setting) => {
+                         if((setting == 1)){
+                            RandomCompanions.Settings.WeaverlingCharmFree = true;
+                        } else {
+                            RandomCompanions.Settings.WeaverlingCharmFree = false;
                         } 
                     },
                     () => {
-                         return RandomCompanions.Settings.WeaverlingcharmCost == 0 ? 1 : 0;
+                         return RandomCompanions.Settings.WeaverlingCharmFree ? 1 : 0;
                     },
                     Id:"FreeWeaverlings"),
+
                 new CustomSlider(
                     "Max Weaverling Count",
                     (f)=>{
